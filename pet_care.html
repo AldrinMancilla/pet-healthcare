@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pet Care Management System</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #f4f6f8; margin: 0; padding: 20px; color: #222; }
+  .box { max-width: 760px; margin: auto; }
+  h1 { text-align: center; }
+  .card { background: #fff; border-radius: 8px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
+  h2 { margin-top: 0; font-size: 18px; }
+  input, select { padding: 8px; margin: 4px 4px 4px 0; border: 1px solid #bbb; border-radius: 4px; font-size: 14px; }
+  button { padding: 8px 14px; border: none; border-radius: 4px; background: #2d7ff9; color: #fff; cursor: pointer; font-size: 14px; }
+  button.small { padding: 4px 8px; font-size: 12px; background: #d9534f; }
+  button.green { background: #3a9d5d; }
+  .tabs button { background: #dfe6ee; color: #222; margin: 0 4px 6px 0; }
+  .tabs button.active { background: #2d7ff9; color: #fff; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+  th, td { text-align: left; padding: 6px; border-bottom: 1px solid #ddd; }
+  .empty { color: #777; margin-top: 10px; }
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>Pet Care Management System</h1>
+
+  <div class="card">
+    <h2>Add Pet</h2>
+    <input id="pName" placeholder="Pet name">
+    <input id="pSpecies" placeholder="Species (dog, cat...)">
+    <input id="pBreed" placeholder="Breed">
+    <input id="pAge" placeholder="Age">
+    <input id="pWeight" placeholder="Weight (kg)">
+    <button onclick="addPet()">Add Pet</button>
+  </div>
+
+  <div class="card">
+    <h2>Choose Pet</h2>
+    <select id="petSelect" onchange="render()"></select>
+    <div class="tabs" style="margin-top:10px;" id="tabs"></div>
+    <div id="feature"></div>
+  </div>
+</div>
+
+<script>
+// Feature fields: [key, label]
+var FEATURES = {
+  schedule: { title: "Schedule / Checkup", fields: [["date","Date"],["type","Type (vet, vaccine, grooming)"],["place","Clinic / place"],["notes","Notes"]] },
+  sickness: { title: "Pet Sickness",       fields: [["date","Date noticed"],["sickness","Sickness"],["symptoms","Symptoms"],["status","Status (ongoing / recovered)"]] },
+  vitamins: { title: "Vitamins",           fields: [["name","Vitamin name"],["dose","Dose"],["how_often","How often"]] },
+  medicine: { title: "Medicine",           fields: [["name","Medicine name"],["for","What is it for"],["dose","Dose"],["how_often","How often"],["until","Until when"]] },
+  needs:    { title: "Needs",              fields: [["item","Item needed"],["quantity","Quantity"]] }
+};
+
+var data = { pets: {} };
+var currentTab = "schedule";
+
+// Load / save (falls back to memory if storage is blocked)
+try { var saved = localStorage.getItem("petCareData"); if (saved) data = JSON.parse(saved); } catch (e) {}
+function save() { try { localStorage.setItem("petCareData", JSON.stringify(data)); } catch (e) {} }
+
+function addPet() {
+  var name = document.getElementById("pName").value.trim();
+  if (!name) { alert("Please enter a pet name."); return; }
+  if (data.pets[name]) { alert("That pet already exists."); return; }
+  data.pets[name] = {
+    species: document.getElementById("pSpecies").value.trim(),
+    breed: document.getElementById("pBreed").value.trim(),
+    age: document.getElementById("pAge").value.trim(),
+    weight: document.getElementById("pWeight").value.trim(),
+    schedule: [], sickness: [], vitamins: [], medicine: [], needs: []
+  };
+  ["pName","pSpecies","pBreed","pAge","pWeight"].forEach(function (id) { document.getElementById(id).value = ""; });
+  save();
+  document.getElementById("petSelect").value = name;
+  render();
+}
+
+function currentPet() { return document.getElementById("petSelect").value; }
+
+function addRecord() {
+  var pet = data.pets[currentPet()];
+  var rec = {};
+  FEATURES[currentTab].fields.forEach(function (f) { rec[f[0]] = document.getElementById("f_" + f[0]).value.trim(); });
+  if (currentTab === "needs") rec.bought = "no";
+  pet[currentTab].push(rec);
+  save();
+  render();
+}
+
+function removeRecord(i) { data.pets[currentPet()][currentTab].splice(i, 1); save(); render(); }
+function markBought(i)   { data.pets[currentPet()].needs[i].bought = "yes"; save(); render(); }
+function setTab(t)       { currentTab = t; render(); }
+
+function esc(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+function render() {
+  var select = document.getElementById("petSelect");
+  var keep = select.value;
+  var names = Object.keys(data.pets);
+  select.innerHTML = names.length ? names.map(function (n) { return "<option>" + esc(n) + "</option>"; }).join("") : "<option>(no pets yet)</option>";
+  if (names.indexOf(keep) !== -1) select.value = keep;
+
+  document.getElementById("tabs").innerHTML = Object.keys(FEATURES).map(function (k) {
+    return '<button class="' + (k === currentTab ? "active" : "") + '" onclick="setTab(\'' + k + '\')">' + FEATURES[k].title + "</button>";
+  }).join("");
+
+  var box = document.getElementById("feature");
+  if (!names.length) { box.innerHTML = '<p class="empty">Add a pet first.</p>'; return; }
+
+  var feat = FEATURES[currentTab];
+  var pet = data.pets[select.value];
+
+  var html = "<h2>" + feat.title + " for " + esc(select.value) + "</h2>";
+  feat.fields.forEach(function (f) { html += '<input id="f_' + f[0] + '" placeholder="' + f[1] + '">'; });
+  html += '<button onclick="addRecord()">Add</button>';
+
+  var recs = pet[currentTab];
+  if (!recs.length) {
+    html += '<p class="empty">Nothing recorded yet.</p>';
+  } else {
+    html += "<table><tr>" + feat.fields.map(function (f) { return "<th>" + f[1].split(" (")[0] + "</th>"; }).join("");
+    if (currentTab === "needs") html += "<th>Bought</th>";
+    html += "<th></th></tr>";
+    recs.forEach(function (r, i) {
+      html += "<tr>" + feat.fields.map(function (f) { return "<td>" + esc(r[f[0]]) + "</td>"; }).join("");
+      if (currentTab === "needs") {
+        html += "<td>" + (r.bought === "yes" ? "Yes" : '<button class="small green" onclick="markBought(' + i + ')">Mark bought</button>') + "</td>";
+      }
+      html += '<td><button class="small" onclick="removeRecord(' + i + ')">Remove</button></td></tr>';
+    });
+    html += "</table>";
+  }
+  box.innerHTML = html;
+}
+
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Personal Computer Checking System</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main class="app-shell">
+    <section id="home" class="screen active">
+      <header class="hero">
+        <div class="brand-mark">PC</div>
+        <h1>Personal Computer<br>Checking System</h1>
+        <p>Select an option below</p>
+      </header>
+      <nav class="menu">
+        <button class="menu-button" data-screen="specs"><span>1. Input PC Specs</span><b>›</b></button>
+        <button class="menu-button" data-screen="bottleneck"><span>2. Check Bottleneck</span><b>›</b></button>
+        <button class="menu-button" data-screen="compatibility"><span>3. Check Compatibility</span><b>›</b></button>
+        <button class="menu-button" data-screen="troubleshoot"><span>4. Troubleshoot PC</span><b>›</b></button>
+        <button class="menu-button exit-button" id="exitButton"><span>Exit</span></button>
+      </nav>
+      <p class="footer-note">PC CHECKER <span>•</span> Simple hardware checks</p>
+    </section>
+
+    <section id="specs" class="screen">
+      <header class="page-heading"><p class="eyebrow">YOUR COMPUTER</p><h1>Input PC Specs</h1><p>Enter your computer information</p></header>
+      <form id="specsForm" class="panel form-panel">
+        <label>CPU<input name="cpu" placeholder="Enter CPU, e.g. Ryzen 5 5600G" required></label>
+        <label>CPU Socket<input name="cpu_socket" placeholder="Enter CPU Socket, e.g. AM4" required></label>
+        <label>GPU<input name="gpu" placeholder="Enter GPU, e.g. RX 6600" required></label>
+        <div class="field-row">
+          <label>RAM Size (GB)<input name="ram_gb" type="number" min="1" placeholder="Enter RAM size" required></label>
+          <label>RAM Type<select name="ram_type" required><option value="">Select type</option><option>DDR4</option><option>DDR5</option></select></label>
+        </div>
+        <label>Motherboard Socket<input name="motherboard_socket" placeholder="Enter motherboard socket" required></label>
+        <label>Motherboard Supported RAM Type<select name="motherboard_ram_type" required><option value="">Select supported type</option><option>DDR4</option><option>DDR5</option></select></label>
+        <div class="field-row">
+          <label>Storage Size (GB)<input name="storage_gb" type="number" min="1" placeholder="e.g. 512" required></label>
+          <label>PSU Wattage (W)<input name="psu_watt" type="number" min="1" placeholder="e.g. 550" required></label>
+        </div>
+        <div class="actions"><button class="primary" type="submit">Save Specs</button><button class="secondary" type="button" data-home>Back</button></div>
+        <p id="saveMessage" class="notice" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <section id="bottleneck" class="screen">
+      <header class="page-heading"><p class="eyebrow">PERFORMANCE</p><h1>Bottleneck Check</h1><p>Enter your CPU and GPU to check for bottlenecks</p></header>
+      <form id="bottleneckForm" class="panel form-panel">
+        <label>CPU<input name="cpu" placeholder="Enter CPU" required></label>
+        <label>GPU<input name="gpu" placeholder="Enter GPU" required></label>
+        <div class="result-box"><h3>Result</h3><p id="bottleneckResult">Bottleneck result will appear here.</p></div>
+        <div class="actions"><button class="primary" type="submit">Check Bottleneck</button><button class="secondary" type="button" data-home>Back</button></div>
+      </form>
+    </section>
+
+    <section id="compatibility" class="screen">
+      <header class="page-heading"><p class="eyebrow">HARDWARE</p><h1>Compatibility Check</h1><p>Enter the required PC information</p></header>
+      <form id="compatibilityForm" class="panel form-panel">
+        <label>CPU Socket<input name="cpu_socket" placeholder="Enter CPU Socket" required></label>
+        <label>Motherboard Socket<input name="motherboard_socket" placeholder="Enter Motherboard Socket" required></label>
+        <div class="field-row">
+          <label>RAM Type<select name="ram_type" required><option value="">Select type</option><option>DDR4</option><option>DDR5</option></select></label>
+          <label>Motherboard Supported RAM Type<select name="motherboard_ram_type" required><option value="">Select type</option><option>DDR4</option><option>DDR5</option></select></label>
+        </div>
+        <label>GPU Model<input name="gpu" placeholder="Enter GPU, e.g. RX 6600" required></label>
+        <label>PSU Wattage (W)<input name="psu_watt" type="number" min="1" placeholder="Enter PSU wattage" required></label>
+        <div class="result-box"><h3>Result</h3><p id="compatibilityResult">Compatibility result will appear here.</p></div>
+        <div class="actions"><button class="primary" type="submit">Check Compatibility</button><button class="secondary" type="button" data-home>Back</button></div>
+      </form>
+    </section>
+
+    <section id="troubleshoot" class="screen">
+      <header class="page-heading"><p class="eyebrow">HELP CENTER</p><h1>Troubleshoot PC</h1><p>Select a problem to troubleshoot</p></header>
+      <div class="panel">
+        <div id="troubleshootChoices" class="menu compact-menu">
+          <button class="menu-button problem-button" data-problem="1"><span>1. PC won't turn on</span><b>›</b></button>
+          <button class="menu-button problem-button" data-problem="2"><span>2. No Display / Black Screen</span><b>›</b></button>
+          <button class="menu-button problem-button" data-problem="3"><span>3. PC randomly restarts or shuts down</span><b>›</b></button>
+          <button class="menu-button problem-button" data-problem="4"><span>4. Slow performance / lag</span><b>›</b></button>
+          <button class="menu-button problem-button" data-problem="5"><span>5. Blue screen (BSOD)</span><b>›</b></button>
+        </div>
+        <div id="troubleshootResult" class="result-box hidden"></div>
+        <div class="actions"><button id="troubleBack" class="secondary hidden" type="button">Choose another problem</button><button class="secondary" type="button" data-home>Back to Menu</button></div>
+      </div>
+    </section>
+    <div id="toast" class="toast" role="status"></div>
+  </main>
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
